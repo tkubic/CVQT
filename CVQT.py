@@ -3,6 +3,17 @@ from PyQt4 import QtGui, QtCore
 from CVQTui import Ui_MainWindow
 import cv2
 import numpy as np
+from picamera.array import PiRGBArray
+from picamera import PiCamera
+import time
+
+global workingImage
+workingImage = np.zeros((300, 300, 3), dtype="uint8")
+global activeImage
+activeImage = np.zeros((300, 300, 3), dtype="uint8")
+
+global camera
+camera = PiCamera()
 
 class Main(QtGui.QMainWindow):
     def __init__(self):
@@ -12,11 +23,36 @@ class Main(QtGui.QMainWindow):
         self.setupSignals()
 
     def setupSignals(self):
-        self.ui.btnReset.clicked.connect(self.reset)
-        self.ui.btnApply.clicked.connect(self.updateWorkingImg)
-        self.ui.rbOrigImg.toggled.connect(self.switchMainImage)
-        self.ui.actionOpen.triggered.connect(self.fileOpen)
 
+        self.ui.btnReset.clicked.connect(self.reset)
+        self.ui.btnApply.clicked.connect(self.setWorkingImg)
+        self.ui.btnPicamSnap.clicked.connect(self.picamSnap)
+
+        # radio buttons under orig and active images
+        self.ui.rbOrigWorking.toggled.connect(self.showOrigImage)
+        self.ui.rbOrigOrig.toggled.connect(self.showOrigImage)
+        self.ui.rbOrigTemplate.toggled.connect(self.showOrigImage)
+        self.ui.rbActiveActive.toggled.connect(self.showActiveImage)
+        self.ui.rbActiveOriginal.toggled.connect(self.showActiveImage)
+
+        # functions under menu bar
+        self.ui.actionOpen.triggered.connect(self.fileOpen)
+        self.ui.actionLoad_template.triggered.connect(self.templateOpen)
+        self.ui.actionSave_Image.triggered.connect(self.fileSave)
+
+        # functions under basic tab
+        self.ui.btnRotate90.clicked.connect(lambda: self.rotateImg(90))
+        self.ui.btnRotate180.clicked.connect(lambda: self.rotateImg(180))
+        self.ui.btnRotate270.clicked.connect(lambda: self.rotateImg(270))
+        self.ui.sbRotateX.valueChanged.connect(lambda: self.rotateImg(self.ui.sbRotateX.value()))
+
+        # functions under Region of Interest (ROI)
+        self.ui.sliderROIBottom.valueChanged.connect(self.roiSelect)
+        self.ui.sliderROITop.valueChanged.connect(self.roiSelect)
+        self.ui.sliderROILeft.valueChanged.connect(self.roiSelect)
+        self.ui.sliderROIRight.valueChanged.connect(self.roiSelect)
+
+        # color operations
         self.ui.listGreyscale.currentItemChanged.connect(self.toGreyscale)
         self.ui.sbLH.valueChanged.connect(self.hsvMask)
         self.ui.sbLS.valueChanged.connect(self.hsvMask)
@@ -25,6 +61,7 @@ class Main(QtGui.QMainWindow):
         self.ui.sbUS.valueChanged.connect(self.hsvMask)
         self.ui.sbUV.valueChanged.connect(self.hsvMask)
 
+        # greyscale operations
         self.ui.btnCannyEdges.clicked.connect(self.auto_canny)
         self.ui.btnEqualizeHist.clicked.connect(self.equalizeHist)
         self.ui.btnCLAHE.clicked.connect(self.clahe)
@@ -32,37 +69,24 @@ class Main(QtGui.QMainWindow):
         self.ui.btnBlurGaussian.clicked.connect(self.blurGaussian)
         self.ui.btnBlurMedian.clicked.connect(self.blurMedian)
         self.ui.btnFilterBilateral.clicked.connect(self.filterBilateral)
-        # self.ui.cbThreshType.currentIndexChanged.connect(self.getThreshType)
         self.ui.btnThreshGlobal.clicked.connect(self.threshGlobal)
         self.ui.btnThreshGaussian.clicked.connect(self.threshGaussian)
         self.ui.btnThreshMean.clicked.connect(self.threshMean)
 
+        # binary operations
         self.ui.btnErode.clicked.connect(self.erosion)
         self.ui.btnDilate.clicked.connect(self.dilation)
         self.ui.btnOpen.clicked.connect(self.opening)
         self.ui.btnClose.clicked.connect(self.closing)
 
+        # find contours operations
         self.ui.btnFindRectangle.clicked.connect(self.findRectangle)
         self.ui.btnFindMinRectangle.clicked.connect(self.findMinAreaRectangle)
         self.ui.btnFindMinCircle.clicked.connect(self.findMinCircle)
         self.ui.btnFitEllipse.clicked.connect(self.fitEllipse)
 
-    def fileOpen(self):
-        # load image file, set image to origImage, activeImage, and workingImage
-        file_name = QtGui.QFileDialog.getOpenFileName(self, 'Open Photo', '/home/pi/Desktop/', 'images(*.png *.jpg *.jpeg)')
-        global origImage
-        origImage = cv2.imread(str(file_name))
-        global workingImage
-        workingImage = origImage
-        global activeImage
-        activeImage = origImage
-        global origImagePx
-        origImagePx = self.mat2Pixmap(origImage, self.ui.lblOriginalImage)
-        global workingImagePx
-        workingImagePx = origImagePx
-        self.ui.lblOriginalImage.setPixmap(origImagePx)
-        activeImagePx = self.mat2Pixmap(origImage, self.ui.lblActiveImage)
-        self.ui.lblActiveImage.setPixmap(activeImagePx)
+        # feature detection operations
+        self.ui.btnTemplateFind.clicked.connect(self.matchTemplate)
 
     def mat2Pixmap(self, cv2Image, lbl):
         # convert image from cv mat type to qt pixmap
@@ -72,7 +96,6 @@ class Main(QtGui.QMainWindow):
         # scale image to fit inside window
         qtPixmap = qtPixmap.scaled(lbl.size(), QtCore.Qt.KeepAspectRatio)
         return qtPixmap
-
 
     def toQImage(self, im, copy=False):
         # converts the cv mat type image to a Qimage type
@@ -94,6 +117,80 @@ class Main(QtGui.QMainWindow):
                         .rgbSwapped();
                     return qim.copy() if copy else qim
 
+    def setWorkingImg(self):
+        global workingImage
+        print ("updating working image")
+        workingImage = activeImage
+        self.updateWorkingImg()
+
+    def updateOrigImg(self):
+        origImagePx = self.mat2Pixmap(origImage, self.ui.lblOrigOrig)
+        self.ui.lblOrigOrig.setPixmap(origImagePx)
+        self.ui.lblActiveOrig.setPixmap(origImagePx)
+
+    def updateActiveImg(self):
+        # create QT pixmap datatype for QT to display
+        activeImagePx = self.mat2Pixmap(activeImage, self.ui.lblActiveActive)
+        # Putting pixmap image into QT label container
+        self.ui.lblActiveActive.setPixmap(activeImagePx)
+
+    def updateWorkingImg(self):
+        workingImagePx = self.mat2Pixmap(workingImage, self.ui.lblOrigWorking)
+        self.ui.lblOrigWorking.setPixmap(workingImagePx)
+
+    def updateTemplateImg(self):
+        templateImagePx = self.mat2Pixmap(templateImage, self.ui.lblActiveActive)
+        self.ui.lblOrigTemplate.setPixmap(templateImagePx)
+
+    def fileOpen(self):
+        # load image file, set image to origImage, activeImage, and workingImage
+        file_name = QtGui.QFileDialog.getOpenFileName(self, 'Open Photo', '/home/pi/Desktop/', 'images(*.png *.jpg *.jpeg)')
+        global origImage
+        origImage = cv2.imread(str(file_name))
+        global workingImage
+        workingImage = origImage
+        global activeImage
+        activeImage = origImage
+        self.updateActiveImg()
+        self.updateWorkingImg()
+        self.updateOrigImg()
+
+    def templateOpen(self):
+        # load image file, set image to origImage, activeImage, and workingImage
+        file_name = QtGui.QFileDialog.getOpenFileName(self, 'Open Photo', '/home/pi/Desktop/', 'images(*.png *.jpg *.jpeg)')
+        global templateImage
+        templateImage = cv2.imread(str(file_name), 0)
+        self.updateTemplateImg()
+
+    def fileSave(self):
+        # save the image currently in the workingImage variable
+        file_name = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '', 'images(*.png')
+        file_name = str(file_name) + ".png"
+        cv2.imwrite(file_name, workingImage)
+
+    def rotateImg(self, angle):
+        (h, w) = workingImage.shape[:2]
+        center = (w/2, h/2)
+        M = cv2.getRotationMatrix2D(center, angle, 1.0)
+        global activeImage
+        activeImage = cv2.warpAffine(workingImage, M, (w, h))
+        self.updateActiveImg()
+
+    def roiSelect(self):
+        global activeImage
+        if self.ui.rbROIEnable.isChecked():
+            (h, w) = workingImage.shape[:2]
+            x1 = int(self.ui.sliderROILeft.value()/100.0 * w)
+            x2 = int((1 - self.ui.sliderROIRight.value()/100.0) * w)
+            y1 = int(self.ui.sliderROITop.value()/100.0 * h)
+            y2 = int((1 - self.ui.sliderROIBottom.value()/100.0) * h)
+            print(x1, x2, y1, y2)
+            if self.ui.rbROICrop.isChecked():
+                activeImage = workingImage[y1:y2, x1:x2].copy()
+            self.updateActiveImg()
+        else:
+            pass
+
     def reset(self):
         global activeImage
         activeImage = origImage
@@ -102,22 +199,19 @@ class Main(QtGui.QMainWindow):
         self.updateActiveImg()
         self.updateWorkingImg()
 
-    def updateActiveImg(self):
-        activeImagePx = self.mat2Pixmap(activeImage,self.ui.lblActiveImage)
-        self.ui.lblActiveImage.setPixmap(activeImagePx)
+    def showOrigImage(self):
+        if self.ui.rbOrigWorking.isChecked():
+            self.ui.stackOrig.setCurrentIndex(0)
+        elif self.ui.rbOrigOrig.isChecked():
+            self.ui.stackOrig.setCurrentIndex(1)
+        elif self.ui.rbOrigTemplate.isChecked():
+            self.ui.stackOrig.setCurrentIndex(2)
 
-    def updateWorkingImg(self):
-        global workingImage
-        workingImage = activeImage
-        global workingImagePx
-        workingImagePx = self.mat2Pixmap(workingImage, self.ui.lblOriginalImage)
-        self.switchMainImage()
-
-    def switchMainImage(self):
-        if not self.ui.rbOrigImg.isChecked():
-            self.ui.lblOriginalImage.setPixmap(workingImagePx)
-        if self.ui.rbOrigImg.isChecked():
-            self.ui.lblOriginalImage.setPixmap(origImagePx)
+    def showActiveImage(self):
+        if self.ui.rbActiveActive.isChecked():
+            self.ui.stackActive.setCurrentIndex(0)
+        elif self.ui.rbActiveOriginal.isChecked():
+            self.ui.stackActive.setCurrentIndex(1)
 
     def toGreyscale(self, item):
         itemtext = str(item.text())
@@ -167,7 +261,7 @@ class Main(QtGui.QMainWindow):
         self.updateActiveImg()
 
     def erosion(self):
-        # Erode the image to get rid of noise
+        # Erode the image using kernel specified
         kernel = np.ones((self.ui.sbKernel1.value(), self.ui.sbKernel2.value()), np.uint8)
         global activeImage
         activeImage = cv2.erode(workingImage, kernel, iterations=1)
@@ -264,7 +358,7 @@ class Main(QtGui.QMainWindow):
 
     def auto_canny(self, sigma=0.33):
         # compute the median of the single channel pixel intensities
-        v = np.median(activeImage)
+        v = np.median(workingImage)
         # apply automatic Canny edge detection using the computed median
         lower = int(max(0, (1.0 - sigma) * v))
         upper = int(min(255, (1.0 + sigma) * v))
@@ -330,6 +424,62 @@ class Main(QtGui.QMainWindow):
         activeImage = cv2.ellipse(origImage.copy(), ellipse, (0, 255, 0), 4)
         self.updateActiveImg()
 
+    def matchTemplate(self):
+        # sets method equal to what is in the Template Method combo box
+        method = 0
+        if self.ui.cbTemplateMethod.currentText() == "SQDIFF":
+            method = cv2.TM_SQDIFF
+        elif self.ui.cbTemplateMethod.currentText() == "SQDIFF_NORMED":
+            method = cv2.TM_SQDIFF_NORMED
+        elif self.ui.cbTemplateMethod.currentText() == "CCORR":
+            method = cv2.TM_CCORR
+        elif self.ui.cbTemplateMethod.currentText() == "CCORR_NORMED":
+            method = cv2.TM_CCORR_NORMED
+        elif self.ui.cbTemplateMethod.currentText() == "CCOEFF":
+            method = cv2.TM_CCOEFF
+        elif self.ui.cbTemplateMethod.currentText() == "CCOEFF_NORMED":
+            method = cv2.TM_CCOEFF_NORMED
+        # perform the cv2.matchTemplate function and store output to 'result'
+        result = cv2.matchTemplate(workingImage, templateImage, method)
+        # find the minimum and maximum match values as well as their locations on the photo
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+        # If the method is TM_SQDIFF or TM_SQDIFF_NORMED, take minimum
+        if method in [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED]:
+            top_left = min_loc
+        else: # all other methods
+            top_left = max_loc
+        # height and width of template photo
+        h, w = templateImage.shape[:2]
+        # draw a rectangle on the active image
+        bottom_right = (top_left[0] + w, top_left[1] +h)
+        global activeImage
+        # create a copy of the workingImage object since cv2.rectangle modifies the object directly
+        # omitting the following line causes cv2.rectangle draw a rectangle on all references to the image object
+        activeImage = workingImage.copy()
+        cv2.rectangle(activeImage, top_left, bottom_right, 255, 4)
+        self.updateActiveImg()
+
+    def picamSnap(self):
+        # initialize the camera and grab a reference to the raw camera capture
+        # set camera resolution to what is selected in the combo box
+        camera.resolution = map(int, str(self.ui.cbPicamResolution.currentText()).split("x"))
+        rawCapture = PiRGBArray(camera)
+
+        # allow the camera to warmup
+        time.sleep(0.1)
+
+        # grab an image from the camera
+        camera.capture(rawCapture, format="bgr")
+        image = rawCapture.array
+        global activeImage
+        activeImage = image
+        global workingImage
+        workingImage = image
+        global origImage
+        origImage = image
+        self.updateActiveImg()
+        self.updateWorkingImg()
+        self.updateOrigImg()
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)

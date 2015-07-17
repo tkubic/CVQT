@@ -565,7 +565,7 @@
          <item row="0" column="3">
           <widget class="QStackedWidget" name="stackActive">
            <property name="currentIndex">
-            <number>1</number>
+            <number>0</number>
            </property>
            <widget class="QWidget" name="pageActiveImage">
             <layout class="QHBoxLayout" name="horizontalLayout">
@@ -581,7 +581,7 @@
                 <locale language="English" country="UnitedStates"/>
                </property>
                <property name="text">
-                <string>box2</string>
+                <string>active</string>
                </property>
               </widget>
              </item>
@@ -592,7 +592,7 @@
              <item>
               <widget class="QLabel" name="lblActiveOrig">
                <property name="text">
-                <string>TextLabel</string>
+                <string>orig</string>
                </property>
               </widget>
              </item>
@@ -605,7 +605,7 @@
            <property name="currentIndex">
             <number>0</number>
            </property>
-           <widget class="QWidget" name="pageOriginalImage">
+           <widget class="QWidget" name="pageOrigWorking">
             <layout class="QHBoxLayout" name="horizontalLayout_2">
              <item>
               <widget class="QLabel" name="lblOrigWorking">
@@ -619,29 +619,35 @@
                 <bool>false</bool>
                </property>
                <property name="text">
-                <string>box1</string>
+                <string>working</string>
                </property>
               </widget>
              </item>
             </layout>
            </widget>
-           <widget class="QWidget" name="pageWorkingImage">
+           <widget class="QWidget" name="pageOrigOrig">
             <layout class="QVBoxLayout" name="verticalLayout_6">
              <item>
               <widget class="QLabel" name="lblOrigOrig">
                <property name="text">
-                <string>TextLabel</string>
+                <string>orig</string>
                </property>
               </widget>
              </item>
             </layout>
            </widget>
-           <widget class="QWidget" name="page">
+           <widget class="QWidget" name="pageOrigTemplate">
             <layout class="QVBoxLayout" name="verticalLayout_4">
              <item>
               <widget class="QLabel" name="lblOrigTemplate">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="text">
-                <string>TextLabel</string>
+                <string>template</string>
                </property>
               </widget>
              </item>
@@ -702,32 +708,27 @@
          </property>
          <item>
           <property name="text">
-           <string>Resolution</string>
+           <string>640x480</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>(640, 480)</string>
+           <string>960x720</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>(960, 720)</string>
+           <string>1280x960</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>(1280, 960)</string>
+           <string>1440x1080</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>(1440, 1080)</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>(2592, 1944)</string>
+           <string>2592x1944</string>
           </property>
          </item>
         </widget>
@@ -1326,7 +1327,7 @@
         <enum>QFrame::Raised</enum>
        </property>
        <property name="currentIndex">
-        <number>3</number>
+        <number>0</number>
        </property>
        <property name="tabSpacing">
         <number>2</number>
@@ -1349,7 +1350,7 @@
         <attribute name="label">
          <string>Basics</string>
         </attribute>
-        <layout class="QGridLayout" name="gridLayout_21" rowstretch="0,0,0,0,0,0">
+        <layout class="QGridLayout" name="gridLayout_21" rowstretch="0,0,0,0,0,0,0,0">
          <property name="leftMargin">
           <number>2</number>
          </property>
@@ -1368,17 +1369,7 @@
          <property name="verticalSpacing">
           <number>0</number>
          </property>
-         <item row="2" column="1">
-          <widget class="QDoubleSpinBox" name="dsbScale"/>
-         </item>
-         <item row="1" column="0" colspan="2">
-          <widget class="QPushButton" name="pbMirror">
-           <property name="text">
-            <string>Mirror</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
+         <item row="4" column="0">
           <widget class="QLabel" name="lblScale">
            <property name="text">
             <string>Scale</string>
@@ -1388,7 +1379,7 @@
            </property>
           </widget>
          </item>
-         <item row="5" column="0" colspan="2">
+         <item row="7" column="0" colspan="2">
           <spacer name="verticalSpacer_9">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
@@ -1421,34 +1412,8 @@
             <string>Rotate</string>
            </property>
            <layout class="QGridLayout" name="gridLayout_20">
-            <item row="0" column="0">
-             <widget class="QPushButton" name="pbRotate90">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>90 Degrees</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QPushButton" name="pbRotate180">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>180 Degrees</string>
-              </property>
-             </widget>
-            </item>
             <item row="1" column="0">
-             <widget class="QPushButton" name="pbRotate270">
+             <widget class="QPushButton" name="btnRotate270">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -1460,6 +1425,26 @@
               </property>
              </widget>
             </item>
+            <item row="3" column="1">
+             <widget class="QLabel" name="lblRotateDegrees">
+              <property name="text">
+               <string>Degrees</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QPushButton" name="btnRotate90">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>90 Degrees</string>
+              </property>
+             </widget>
+            </item>
             <item row="3" column="0">
              <widget class="QSpinBox" name="sbRotateX">
               <property name="sizePolicy">
@@ -1468,17 +1453,36 @@
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="maximum">
+               <number>360</number>
+              </property>
              </widget>
             </item>
-            <item row="3" column="1">
-             <widget class="QLabel" name="lblRotateDegrees">
+            <item row="0" column="1">
+             <widget class="QPushButton" name="btnRotate180">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="text">
-               <string>Degrees</string>
+               <string>180 Degrees</string>
               </property>
              </widget>
             </item>
            </layout>
           </widget>
+         </item>
+         <item row="1" column="0" colspan="2">
+          <widget class="QPushButton" name="pbMirror">
+           <property name="text">
+            <string>Mirror</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QDoubleSpinBox" name="dsbScale"/>
          </item>
         </layout>
        </widget>
@@ -1604,6 +1608,9 @@
                   <height>150</height>
                  </size>
                 </property>
+                <property name="maximum">
+                 <number>100</number>
+                </property>
                 <property name="value">
                  <number>0</number>
                 </property>
@@ -1637,6 +1644,9 @@
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="maximum">
+                 <number>100</number>
+                </property>
                 <property name="orientation">
                  <enum>Qt::Vertical</enum>
                 </property>
@@ -1657,6 +1667,9 @@
                 <width>170</width>
                 <height>0</height>
                </size>
+              </property>
+              <property name="maximum">
+               <number>100</number>
               </property>
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
@@ -1680,6 +1693,9 @@
                 <height>0</height>
                </size>
               </property>
+              <property name="maximum">
+               <number>100</number>
+              </property>
               <property name="value">
                <number>0</number>
               </property>
@@ -1700,6 +1716,9 @@
                <widget class="QRadioButton" name="rbROICrop">
                 <property name="text">
                  <string>Crop</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -2830,46 +2849,45 @@
             <string>Template Matching</string>
            </property>
            <layout class="QGridLayout" name="gridLayout_10">
-            <item row="1" column="1">
-             <widget class="QPushButton" name="pbTemplateCCORR_NORMED">
+            <item row="1" column="0">
+             <widget class="QPushButton" name="btnTemplateFind">
               <property name="text">
-               <string>NORMED</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QPushButton" name="pbTemplateSQDIFF_NORMED">
-              <property name="text">
-               <string>NORMED</string>
+               <string>Match Template</string>
               </property>
              </widget>
             </item>
             <item row="0" column="0">
-             <widget class="QPushButton" name="pbTemplateSQDIFF">
-              <property name="text">
-               <string>SQDIFF</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QPushButton" name="pbTemplateCCORR">
-              <property name="text">
-               <string>CCORR</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QPushButton" name="pbTemplateCCOEFF">
-              <property name="text">
-               <string>CCOEFF</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QPushButton" name="pbCCOEFF_NORMED">
-              <property name="text">
-               <string>NORMED</string>
-              </property>
+             <widget class="QComboBox" name="cbTemplateMethod">
+              <item>
+               <property name="text">
+                <string>SQDIFF</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>SQDIFF_NORMED</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>CCORR</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>CCORR_NORMED</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>CCOEFF</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>CCOEFF_NORMED</string>
+               </property>
+              </item>
              </widget>
             </item>
            </layout>
