@@ -1327,7 +1327,7 @@
         <enum>QFrame::Raised</enum>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>6</number>
        </property>
        <property name="tabSpacing">
         <number>2</number>
@@ -2843,7 +2843,7 @@
          <property name="spacing">
           <number>0</number>
          </property>
-         <item row="4" column="0" colspan="2">
+         <item row="4" column="1" colspan="2">
           <widget class="QGroupBox" name="gbTemplate">
            <property name="title">
             <string>Template Matching</string>
@@ -2893,7 +2893,84 @@
            </layout>
           </widget>
          </item>
-         <item row="5" column="0" colspan="2">
+         <item row="5" column="1" colspan="2">
+          <widget class="QGroupBox" name="groupBox">
+           <property name="title">
+            <string>Feature Detection</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_22">
+            <property name="margin">
+             <number>2</number>
+            </property>
+            <property name="spacing">
+             <number>2</number>
+            </property>
+            <item row="4" column="0">
+             <widget class="QComboBox" name="cbFeatureType">
+              <item>
+               <property name="text">
+                <string>ORB</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>SIFT</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>SURF</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>AKAZE</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="QSpinBox" name="sbFeatureMinCnt"/>
+            </item>
+            <item row="7" column="0">
+             <widget class="QLabel" name="lblFeatureMatchCntLbl">
+              <property name="text">
+               <string>Match Count</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QLabel" name="lblFeatureMinCnt">
+              <property name="text">
+               <string>Min Count</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="1">
+             <widget class="QLabel" name="lblFeatureMatchCnt">
+              <property name="text">
+               <string>n/a</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QPushButton" name="btnFeatureDetect">
+              <property name="text">
+               <string>Detect</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QPushButton" name="btnFeatureMatch">
+              <property name="text">
+               <string>Match</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="7" column="1" colspan="2">
           <spacer name="verticalSpacer_8">
            <property name="orientation">
             <enum>Qt::Vertical</enum>

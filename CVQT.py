@@ -87,6 +87,7 @@ class Main(QtGui.QMainWindow):
 
         # feature detection operations
         self.ui.btnTemplateFind.clicked.connect(self.matchTemplate)
+        self.ui.btnFeatureDetect.clicked.connect(self.templateSURF)
 
     def mat2Pixmap(self, cv2Image, lbl):
         # convert image from cv mat type to qt pixmap
@@ -458,6 +459,59 @@ class Main(QtGui.QMainWindow):
         activeImage = workingImage.copy()
         cv2.rectangle(activeImage, top_left, bottom_right, 255, 4)
         self.updateActiveImg()
+
+    def templateSURF(self):
+        if 'surf' not in globals():
+            global surf
+            print("creating surf component")
+            surf = cv2.xfeatures2d.SURF_create(400)
+        # find the keypoints and descriptors with SURF
+        kpT, desT = surf.detectAndCompute(templateImage, None)
+        kpA, desA = surf.detectAndCompute(activeImage, None)
+
+        FLANN_INDEX_KDTREE = 0
+        index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+        search_params = dict(checks=50)
+
+        flann = cv2.FlannBasedMatcher(index_params, search_params)
+
+        matches = flann.knnMatch(desT, desA, k=2)
+
+        # store all the good matches as per Lowe's ratio test
+        good = []
+        for m, n in matches:
+            if m.distance < 0.7*n.distance:
+                good.append(m)
+
+        MIN_MATCH_COUNT = self.ui.sbFeatureMinCnt.value()
+        print(len(good))
+        if len(good)>MIN_MATCH_COUNT:
+            src_pts = np.float32([ kpT[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
+            dst_pts = np.float32([ kpA[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
+
+            M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
+            matchesMask = mask.ravel().tolist()
+
+            h, w = activeImage.shape
+            pts = np.float32([ [0, 0], [0,h-1], [w-1, h-1], [w-1, 0] ]).reshape(-1,1,2)
+            dst = cv2.perspectiveTransform(pts, M)
+
+            global activeImage
+            activeImage = activeImage.copy()
+            activeImage = cv2.polylines(activeImage, [np.int32(dst)], True, 255, 3, cv2.LINE_AA)
+
+        else:
+            print "Not enough matches are found -%d/%d" % (len(good), MIN_MATCH_COUNT)
+            matchesMask = None
+
+        draw_params = dict(matchColor = (0,255, 0),     # draw matches in green color
+                           singlePointColor = None,
+                           matchesMask = matchesMask,   # draw only inliers
+                           flags = 2)
+
+        matchedImage = cv2.drawMatches(templateImage, kpT, activeImage, kpA, good, None, **draw_params)
+
+        cv2.imshow("matched image", matchedImage)
 
     def picamSnap(self):
         # initialize the camera and grab a reference to the raw camera capture
